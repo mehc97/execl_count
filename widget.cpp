@@ -58,7 +58,7 @@ void Widget::insert_table()
         excel->setProperty("DisplayAlerts", true);
         QAxObject *workbooks = excel->querySubObject("WorkBooks");   //获取工作簿(excel文件)集合
 
-        QString filepath = QFileDialog::getOpenFileName(this,"打开",
+        filepath = QFileDialog::getOpenFileName(this,"打开",
                                                    QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation),
                                                    "Excel 文件(*.xls *.xlsx *.xlsm)");
 
@@ -162,32 +162,116 @@ void Widget::calculate_result()
             QString t1week = t1time.toString("ddd");
             if(t1week == "周六" || t1week == "周日")
             {
-                if(ui->tableWidget->item(i,j)->text() == NULL && ui->tableWidget->item(i,j+1)->text() == NULL)
+                chidaotime = 0;
+                zaotuitime = 0;
+
+                QString time_str = ui->tableWidget->item(i,j)->text();
+                QString time_str2 = ui->tableWidget->item(i,j+1)->text();
+
+                QTime time=QTime::fromString(time_str);
+                int allsecond = time.hour()*60*60+time.minute()*60;
+
+                QTime time2=QTime::fromString(time_str2);
+                int allsecond2 = time2.hour()*60*60+time2.minute()*60;
+
+                //算缺勤
+                //大于9.00，小于18.00
+                QString time_str3 = "09:00:00";
+                QTime time3=QTime::fromString(time_str3);
+
+                int allsecond3 = time3.hour()*60*60+time3.minute()*60;
+
+                QString time_str4 = "18:00:00";
+                QTime time4=QTime::fromString(time_str4);
+
+                int allsecond4 = time4.hour()*60*60+time4.minute()*60;
+
+                QString time_str5 = "12:00:00";
+                QTime time5=QTime::fromString(time_str5);
+
+                int allsecond5 = time5.hour()*60*60+time5.minute()*60;
+
+//                if(allsecond > allsecond3)
+//                {
+//                    queqintime +=0.5;
+//                }
+                if(allsecond > allsecond3)
                 {
-                    queqintime+=28800;
+                    if(allsecond > allsecond5)
+                    {
+                        queqintime +=3;
+                    }
+                    else
+                    {
+                        queqintime +=0.5;
+                        while(1)
+                        {
+                            if(allsecond - 1800 > allsecond3)
+                            {
+                                queqintime +=0.5;
+                            }
+                            else
+                            {
+                                break;
+                            }
+                            allsecond -=1800;
+
+                        }
+                    }
+
                 }
-                else
+
+
+                //算加班
+                QString time_str6 = "19:00";
+                QTime time6=QTime::fromString(time_str6);
+
+                int allsecond6 = time6.hour()*60*60+time6.minute()*60;
+
+                QString time_str7 = "13:00";
+                QTime time7=QTime::fromString(time_str7);
+
+                int allsecond7 = time7.hour()*60*60+time7.minute()*60;
+
+                while(allsecond5 - 1800 > allsecond)
                 {
-                    chidaotime = 0;
-                    zaotuitime = 0;
-
-                    QString time_str = ui->tableWidget->item(i,j)->text();
-                    QString time_str2 = ui->tableWidget->item(i,j+1)->text();
-
-                    QTime time=QTime::fromString(time_str);
-                    int allsecond = time.hour()*60*60+time.minute()*60;
-
-                    QTime time2=QTime::fromString(time_str2);
-                    int allsecond2 = time2.hour()*60*60+time2.minute()*60;
-
-                    jiabantime = allsecond2 - allsecond;
+                    jiabantime+=0.5;
                 }
+
+                if(allsecond2 <= allsecond6 && allsecond2 >=allsecond7)
+                {
+                    jiabantime +=5;
+                }
+
+                //计算早退缺勤时间
+                if(allsecond2 < allsecond4)
+                {
+                    if(allsecond2 > allsecond7)
+                    {
+
+                        while(allsecond4 -1800 < allsecond2)
+                        {
+                             queqintime += 0.5;
+                        }
+                    }
+                    else
+                    {
+                         if(allsecond2 + 1800 > allsecond5)
+                         {
+                             queqintime +=0.5;
+                         }
+
+                         queqintime +=5;
+
+                    }
+                }
+
             }
             else
             {
                 if(ui->tableWidget->item(i,j)->text() == NULL)
                 {
-                    queqintime+=28800;
+                    queqintime+=0;
                 }
                 else
                 {
@@ -197,13 +281,13 @@ void Widget::calculate_result()
 
                     int allsecond = time.hour()*60*60+time.minute()*60;
 
-                 //   qDebug()<<"1:"<<allsecond;
+                   // qDebug()<<"1:"<<allsecond;
 
                     QString time_str2 = "09:10:00";
                     QTime time2=QTime::fromString(time_str2);
 
                     int allsecond2 = time2.hour()*60*60+time2.minute()*60;
-                  //  qDebug()<<"2:"<<allsecond2;
+                    //qDebug()<<"2:"<<allsecond2;
 
                     //早退
                     //qDebug()<<" yi "<<ui->tableWidget->item(i,j+1)->text();
@@ -220,11 +304,6 @@ void Widget::calculate_result()
                     int allsecond4 = time4.hour()*60*60+time4.minute()*60;
                    // qDebug()<<"4:"<<allsecond4;
 
-                    //加班
-                    QString time_str5 = "19:00";
-                    QTime time5=QTime::fromString(time_str5);
-
-                    int allsecond5 = time5.hour()*60*60+time5.minute()*60;
 
                     if(allsecond > allsecond2)
                     {
@@ -234,22 +313,128 @@ void Widget::calculate_result()
                     {
                         zaotuitime++;
                     }
-                    if(allsecond3 > allsecond5)
+
+                    //加班
+
+                    QString time_str5 = "19:00";
+                    QTime time5=QTime::fromString(time_str5);
+
+                    int allsecond5 = time5.hour()*60*60+time5.minute()*60;
+
+                  //  qDebug()<<"5:"<<allsecond5;
+
+                    if(allsecond > allsecond5)
                     {
-                        jiabantime = allsecond3 - allsecond5;
+                        while(allsecond - 1800 > 0)
+                        {
+                            jiabantime +=0.5;
+                        }
                     }
+
+                  //  qDebug()<<"jiaban:"<<jiabantime;
+
+                    //缺勤
+                    QString time_str6 = "09:00:00";
+                    QTime time6=QTime::fromString(time_str6);
+
+                    int allsecond6 = time6.hour()*60*60+time6.minute()*60;
+
+                 //   qDebug()<<"6:"<<allsecond6;
+
+
+                    QString time_str7 = "18:00:00";
+                    QTime time7=QTime::fromString(time_str7);
+
+                    int allsecond7 = time7.hour()*60*60+time7.minute()*60;
+
+                    QString time_str8 = "12:00:00";
+                    QTime time8=QTime::fromString(time_str8);
+
+                    int allsecond8 = time8.hour()*60*60+time8.minute()*60;
+
+                    QString time_str9 = "13:00";
+                    QTime time9=QTime::fromString(time_str9);
+
+                    int allsecond9 = time9.hour()*60*60+time9.minute()*60;
+
+
+                    if(allsecond > allsecond6)
+                    {
+                        if(allsecond > allsecond8)
+                        {
+                            queqintime +=3;
+                        }
+                        else
+                        {
+                            queqintime +=0.5;
+                            while(1)
+                            {
+                                if(allsecond - 1800 > allsecond6)
+                                {
+                                    queqintime +=0.5;
+                                }
+                                else
+                                {
+                                    break;
+                                }
+                                allsecond -=1800;
+
+                            }
+                        }
+
+                    }
+
+                    //计算早退缺勤时间
+                    if(allsecond3 < allsecond4)
+                    {
+                        if(allsecond3 > allsecond9)
+                        {
+                            queqintime +=0.5;
+                            while(1)
+                            {
+                                if(allsecond4 - 1800 > allsecond3)
+                                {
+                                    queqintime += 0.5;
+                                }
+                                else
+                                {
+                                    break;
+                                }
+                                allsecond4 -= 1800;
+
+                            }
+                        }
+                        else
+                        {
+                             if(allsecond3 + 1800 > allsecond8)
+                             {
+                                 queqintime +=0.5;
+                             }
+
+                             queqintime +=5;
+
+                        }
+                    }
+
+
+                //    qDebug()<<"7:"<<allsecond7;
+
+                 //    qDebug()<<"queqin:"<<queqintime;
+
+
+
                 }
 
             }
 
         }
 
-        QTime a(0,0);
-        a = a.addSecs(int(queqintime));
+//        QTime a(0,0);
+//        a = a.addSecs(int(queqintime));
 
-        QString strtime = a.toString("hh:mm");
+//        QString strtime = a.toString("hh:mm");
 
-        ui->tableWidget_2->setItem(m, n, new QTableWidgetItem(strtime));
+        ui->tableWidget_2->setItem(m, n, new QTableWidgetItem(QString::number((queqintime))));
         ui->tableWidget_2->setItem(m, n+1, new QTableWidgetItem(QString::number((jiabantime))));
         ui->tableWidget_2->setItem(m, n+2, new QTableWidgetItem(QString::number((chidaotime))));
         ui->tableWidget_2->setItem(m, n+3, new QTableWidgetItem(QString::number((zaotuitime))));
@@ -281,42 +466,160 @@ void Widget::calculate_result()
     {
         for(j = 7; j < 8; ++j)
         {
-            qDebug()<<"time:"<<ui->tableWidget->item(i,j)->text();
+            qDebug()<<"time2:"<<ui->tableWidget->item(i,j)->text();
 
             QDateTime t1time = QDateTime::fromString(ui->tableWidget->item(0,7)->text(),"yyyy-MM-dd");
             QString t1week = t1time.toString("ddd");
             if(t1week == "周六" || t1week == "周日")
             {
-                if(ui->tableWidget->item(i,j)->text() == NULL)
+                qDebug()<<"week:"<<t1week;
+
+                chidaotime = 0;
+                zaotuitime = 0;
+
+                QString time_str = ui->tableWidget->item(i,j)->text();
+                QString time_str2 = ui->tableWidget->item(i,j+1)->text();
+
+                QTime time=QTime::fromString(time_str);
+                int allsecond = time.hour()*60*60+time.minute()*60;
+
+                QTime time2=QTime::fromString(time_str2);
+                int allsecond2 = time2.hour()*60*60+time2.minute()*60;
+
+                qDebug()<<"str1:"<<allsecond;
+                 qDebug()<<"str2:"<<allsecond2;
+
+                //算缺勤
+                //大于9.00，小于18.00
+                QString time_str3 = "09:00:00";
+                QTime time3=QTime::fromString(time_str3);
+
+                int allsecond3 = time3.hour()*60*60+time3.minute()*60;
+
+                QString time_str4 = "18:00:00";
+                QTime time4=QTime::fromString(time_str4);
+
+                int allsecond4 = time4.hour()*60*60+time4.minute()*60;
+
+                QString time_str5 = "12:00:00";
+                QTime time5=QTime::fromString(time_str5);
+
+                int allsecond5 = time5.hour()*60*60+time5.minute()*60;
+
+                qDebug()<<"1";
+
+                if(allsecond > allsecond3)
                 {
-                    queqintime+=28800;
-                    jiabantime =0;
+                    if(allsecond > allsecond5)
+                    {
+                        queqintime +=3;
+                    }
+                    else
+                    {
+                        int tmpnum = allsecond - allsecond3;
+                        queqintime +=0.5;
+                        while(1)
+                        {
+                            if(tmpnum - 1800 > 0)
+                            {
+                                queqintime +=0.5;
+                            }
+                            else
+                            {
+                                break;
+                            }
+                            tmpnum -=1800;
+
+                        }
+                    }
+
                 }
-                else
+                else if(allsecond < 0 || allsecond2 < 0)
                 {
-
-                    QString time_str = ui->tableWidget->item(i,j)->text();
-                    //qDebug()<<" time_str "<<time_str;
-
-                    QString time_str2 = ui->tableWidget->item(i,j+1)->text();
-                    //qDebug()<<" time_str2 "<<time_str2;
-
-                    QTime time=QTime::fromString(time_str);
-                    int allsecond = time.hour()*60*60+time.minute()*60;
-                    //qDebug()<<" allsecond "<<allsecond;
-
-                    QTime time2=QTime::fromString(time_str2);
-                    int allsecond2 = time2.hour()*60*60+time2.minute()*60;
-                    //qDebug()<<" allsecond2 "<<allsecond2;
-
-                    jiabantime = allsecond2 - allsecond;
+                    queqintime =0;
                 }
+                 qDebug()<<"2";
+
+
+                //算加班
+                QString time_str6 = "19:00";
+                QTime time6=QTime::fromString(time_str6);
+
+                int allsecond6 = time6.hour()*60*60+time6.minute()*60;
+
+                QString time_str7 = "13:00";
+                QTime time7=QTime::fromString(time_str7);
+
+                int allsecond7 = time7.hour()*60*60+time7.minute()*60;
+
+                if(allsecond <= allsecond5 && allsecond > 0)
+                {
+                    if(allsecond <= allsecond3)
+                    {
+                        jiabantime +=3;
+                    }
+                    else
+                    {
+                        int tmpnum = allsecond5 - allsecond;
+                         jiabantime +=0.5;
+                        while(1)
+                        {
+
+                            if(tmpnum - 1800 > 1800)
+                            {
+                                jiabantime +=0.5;
+                                qDebug()<<"jiaban:"<<jiabantime;
+                            }
+                            else
+                            {
+                                break;
+                            }
+                            tmpnum -= 1800;
+                        }
+                    }
+                }
+
+                 qDebug()<<"3";
+
+                if(allsecond2 <= allsecond6 && allsecond2 >=allsecond7)
+                {
+                    jiabantime +=5;
+                }
+
+                //计算早退缺勤时间
+                if(allsecond2 < allsecond4)
+                {
+                    if(allsecond2 > allsecond7)
+                    {
+
+                        while(allsecond4 -1800 < allsecond2)
+                        {
+                             queqintime += 0.5;
+                        }
+                    }
+                    else
+                    {
+                         if(allsecond2 + 1800 > allsecond5)
+                         {
+                             queqintime +=0.5;
+                         }
+
+                         queqintime +=5;
+
+                         if(allsecond2 < 0)
+                         {
+                             queqintime = 0;
+                         }
+
+                    }
+                }
+
             }
             else
             {
                 if(ui->tableWidget->item(i,j)->text() == NULL)
                 {
-                    queqintime+=28800;
+                    queqintime+=0;
                 }
                 else
                 {
@@ -332,7 +635,7 @@ void Widget::calculate_result()
                     QTime time2=QTime::fromString(time_str2);
 
                     int allsecond2 = time2.hour()*60*60+time2.minute()*60;
-                   // qDebug()<<"2:"<<allsecond2;
+                    //qDebug()<<"2:"<<allsecond2;
 
                     //早退
                     //qDebug()<<" yi "<<ui->tableWidget->item(i,j+1)->text();
@@ -347,13 +650,8 @@ void Widget::calculate_result()
                     QTime time4=QTime::fromString(time_str4);
 
                     int allsecond4 = time4.hour()*60*60+time4.minute()*60;
-                    //qDebug()<<"4:"<<allsecond4;
+                   // qDebug()<<"4:"<<allsecond4;
 
-                    //加班
-                    QString time_str5 = "19:00";
-                    QTime time5=QTime::fromString(time_str5);
-
-                    int allsecond5 = time5.hour()*60*60+time5.minute()*60;
 
                     if(allsecond > allsecond2)
                     {
@@ -363,50 +661,143 @@ void Widget::calculate_result()
                     {
                         zaotuitime++;
                     }
-                    if(allsecond3 > allsecond5)
+
+                    //加班
+
+                    QString time_str5 = "19:00";
+                    QTime time5=QTime::fromString(time_str5);
+
+                    int allsecond5 = time5.hour()*60*60+time5.minute()*60;
+
+                  //  qDebug()<<"5:"<<allsecond5;
+
+                    if(allsecond > allsecond5)
                     {
-                        jiabantime = allsecond3 - allsecond5;
+                        while(allsecond - 1800 > 0)
+                        {
+                            jiabantime +=0.5;
+                        }
                     }
+
+                  //  qDebug()<<"jiaban:"<<jiabantime;
+
+                    //缺勤
+                    QString time_str6 = "09:00:00";
+                    QTime time6=QTime::fromString(time_str6);
+
+                    int allsecond6 = time6.hour()*60*60+time6.minute()*60;
+
+                 //   qDebug()<<"6:"<<allsecond6;
+
+
+                    QString time_str7 = "18:00:00";
+                    QTime time7=QTime::fromString(time_str7);
+
+                    int allsecond7 = time7.hour()*60*60+time7.minute()*60;
+
+                    QString time_str8 = "12:00:00";
+                    QTime time8=QTime::fromString(time_str8);
+
+                    int allsecond8 = time8.hour()*60*60+time8.minute()*60;
+
+                    QString time_str9 = "13:00";
+                    QTime time9=QTime::fromString(time_str9);
+
+                    int allsecond9 = time9.hour()*60*60+time9.minute()*60;
+
+
+                    if(allsecond > allsecond6)
+                    {
+                        if(allsecond > allsecond8)
+                        {
+                            queqintime +=3;
+                        }
+                        else
+                        {
+                            queqintime +=0.5;
+                            while(1)
+                            {
+                                if(allsecond - 1800 > allsecond6)
+                                {
+                                    queqintime +=0.5;
+                                }
+                                else
+                                {
+                                    break;
+                                }
+                                allsecond -=1800;
+
+                            }
+                        }
+
+                    }
+
+                    //计算早退缺勤时间
+                    if(allsecond3 < allsecond4)
+                    {
+                        if(allsecond3 > allsecond9)
+                        {
+                            queqintime +=0.5;
+                            while(1)
+                            {
+                                if(allsecond4 - 1800 > allsecond3)
+                                {
+                                    queqintime += 0.5;
+                                }
+                                else
+                                {
+                                    break;
+                                }
+                                allsecond4 -= 1800;
+
+                            }
+                        }
+                        else
+                        {
+                             if(allsecond3 + 1800 > allsecond8)
+                             {
+                                 queqintime +=0.5;
+                             }
+
+                             queqintime +=5;
+
+                        }
+                    }
+
+
+                //    qDebug()<<"7:"<<allsecond7;
+
+                 //    qDebug()<<"queqin:"<<queqintime;
+
+
+
                 }
 
             }
 
         }
 
-        //把表格里的数据转成数字，进行相加
-        //转换缺勤
-        QString time_str = ui->tableWidget_2->item(m,n)->text(); //时分秒
-        QTime time=QTime::fromString(time_str);
+//        QTime a(0,0);
+//        a = a.addSecs(int(queqintime));
 
-        int allsecond = time.hour()*60*60+time.minute()*60;
-        allsecond += queqintime;
+//        QString strtime = a.toString("hh:mm");
 
-        QTime a(0,0);
-        a = a.addSecs(int(allsecond));
+        double questr = ui->tableWidget_2->item(m,n)->text().toDouble();
+        queqintime += questr;
 
-        QString strtime = a.toString("hh:mm");
-        //转换加班
-        int time_str2 = ui->tableWidget_2->item(m,n+1)->text().toInt(); //时分
-        jiabantime +=time_str2;
+        double jiastr = ui->tableWidget_2->item(m,n+1)->text().toDouble();
+        jiabantime +=jiastr;
 
-        QTime a2(0,0);
-        a2 = a2.addSecs(int(jiabantime));
+        int chistr = ui->tableWidget_2->item(m,n+2)->text().toInt();
+        chidaotime +=chistr;
 
-        QString strtime2 = a2.toString("hh:mm");
+        int zaostr = ui->tableWidget_2->item(m,n+3)->text().toInt();
+        zaotuitime +=zaostr;
 
-        //转换迟到
-        int time_str3 = ui->tableWidget_2->item(m,n+2)->text().toInt();
-
-        time_str3 += chidaotime;
-
-        //转换早退
-        int time_str4 = ui->tableWidget_2->item(m,n+3)->text().toInt();
-        time_str4 += zaotuitime;
-
-        ui->tableWidget_2->setItem(m, n, new QTableWidgetItem(strtime));
-        ui->tableWidget_2->setItem(m, n+1, new QTableWidgetItem(strtime2));
-        ui->tableWidget_2->setItem(m, n+2, new QTableWidgetItem(QString::number((time_str3))));
-        ui->tableWidget_2->setItem(m, n+3, new QTableWidgetItem(QString::number((time_str4))));
+        ui->tableWidget_2->setItem(m, n, new QTableWidgetItem(QString::number((queqintime))));
+        ui->tableWidget_2->setItem(m, n+1, new QTableWidgetItem(QString::number((jiabantime))));
+        ui->tableWidget_2->setItem(m, n+2, new QTableWidgetItem(QString::number((chidaotime))));
+        ui->tableWidget_2->setItem(m, n+3, new QTableWidgetItem(QString::number((zaotuitime))));
 
         m++;
 
@@ -434,42 +825,160 @@ void Widget::calculate_result()
     {
         for(j = 12; j < 13; ++j)
         {
-            qDebug()<<"time:"<<ui->tableWidget->item(i,j)->text();
+            qDebug()<<"time2:"<<ui->tableWidget->item(i,j)->text();
 
             QDateTime t1time = QDateTime::fromString(ui->tableWidget->item(0,11)->text(),"yyyy-MM-dd");
             QString t1week = t1time.toString("ddd");
             if(t1week == "周六" || t1week == "周日")
             {
-                if(ui->tableWidget->item(i,j)->text() == NULL)
+                qDebug()<<"week:"<<t1week;
+
+                chidaotime = 0;
+                zaotuitime = 0;
+
+                QString time_str = ui->tableWidget->item(i,j)->text();
+                QString time_str2 = ui->tableWidget->item(i,j+1)->text();
+
+                QTime time=QTime::fromString(time_str);
+                int allsecond = time.hour()*60*60+time.minute()*60;
+
+                QTime time2=QTime::fromString(time_str2);
+                int allsecond2 = time2.hour()*60*60+time2.minute()*60;
+
+                qDebug()<<"str1:"<<allsecond;
+                 qDebug()<<"str2:"<<allsecond2;
+
+                //算缺勤
+                //大于9.00，小于18.00
+                QString time_str3 = "09:00:00";
+                QTime time3=QTime::fromString(time_str3);
+
+                int allsecond3 = time3.hour()*60*60+time3.minute()*60;
+
+                QString time_str4 = "18:00:00";
+                QTime time4=QTime::fromString(time_str4);
+
+                int allsecond4 = time4.hour()*60*60+time4.minute()*60;
+
+                QString time_str5 = "12:00:00";
+                QTime time5=QTime::fromString(time_str5);
+
+                int allsecond5 = time5.hour()*60*60+time5.minute()*60;
+
+                qDebug()<<"1";
+
+                if(allsecond > allsecond3)
                 {
-                    queqintime+=28800;
-                    jiabantime =0;
+                    if(allsecond > allsecond5)
+                    {
+                        queqintime +=3;
+                    }
+                    else
+                    {
+                        int tmpnum = allsecond - allsecond3;
+                        queqintime +=0.5;
+                        while(1)
+                        {
+                            if(tmpnum - 1800 > 0)
+                            {
+                                queqintime +=0.5;
+                            }
+                            else
+                            {
+                                break;
+                            }
+                            tmpnum -=1800;
+
+                        }
+                    }
+
                 }
-                else
+                else if(allsecond < 0 || allsecond2 < 0)
                 {
-
-                    QString time_str = ui->tableWidget->item(i,j)->text();
-                  //  qDebug()<<" time_str "<<time_str;
-
-                    QString time_str2 = ui->tableWidget->item(i,j+1)->text();
-                   // qDebug()<<" time_str2 "<<time_str2;
-
-                    QTime time=QTime::fromString(time_str);
-                    int allsecond = time.hour()*60*60+time.minute()*60;
-                    //qDebug()<<" allsecond "<<allsecond;
-
-                    QTime time2=QTime::fromString(time_str2);
-                    int allsecond2 = time2.hour()*60*60+time2.minute()*60;
-                    //qDebug()<<" allsecond2 "<<allsecond2;
-
-                    jiabantime = allsecond2 - allsecond;
+                    queqintime =0;
                 }
+                 qDebug()<<"2";
+
+
+                //算加班
+                QString time_str6 = "19:00";
+                QTime time6=QTime::fromString(time_str6);
+
+                int allsecond6 = time6.hour()*60*60+time6.minute()*60;
+
+                QString time_str7 = "13:00";
+                QTime time7=QTime::fromString(time_str7);
+
+                int allsecond7 = time7.hour()*60*60+time7.minute()*60;
+
+                if(allsecond <= allsecond5 && allsecond > 0)
+                {
+                    if(allsecond <= allsecond3)
+                    {
+                        jiabantime +=3;
+                    }
+                    else
+                    {
+                        int tmpnum = allsecond5 - allsecond;
+                         jiabantime +=0.5;
+                        while(1)
+                        {
+
+                            if(tmpnum - 1800 > 1800)
+                            {
+                                jiabantime +=0.5;
+                                qDebug()<<"jiaban:"<<jiabantime;
+                            }
+                            else
+                            {
+                                break;
+                            }
+                            tmpnum -= 1800;
+                        }
+                    }
+                }
+
+                 qDebug()<<"3";
+
+                if(allsecond2 <= allsecond6 && allsecond2 >=allsecond7)
+                {
+                    jiabantime +=5;
+                }
+
+                //计算早退缺勤时间
+                if(allsecond2 < allsecond4)
+                {
+                    if(allsecond2 > allsecond7)
+                    {
+
+                        while(allsecond4 -1800 < allsecond2)
+                        {
+                             queqintime += 0.5;
+                        }
+                    }
+                    else
+                    {
+                         if(allsecond2 + 1800 > allsecond5)
+                         {
+                             queqintime +=0.5;
+                         }
+
+                         queqintime +=5;
+
+                         if(allsecond2 < 0)
+                         {
+                             queqintime = 0;
+                         }
+
+                    }
+                }
+
             }
             else
             {
                 if(ui->tableWidget->item(i,j)->text() == NULL)
                 {
-                    queqintime+=28800;
+                    queqintime+=0;
                 }
                 else
                 {
@@ -485,7 +994,7 @@ void Widget::calculate_result()
                     QTime time2=QTime::fromString(time_str2);
 
                     int allsecond2 = time2.hour()*60*60+time2.minute()*60;
-                   // qDebug()<<"2:"<<allsecond2;
+                    //qDebug()<<"2:"<<allsecond2;
 
                     //早退
                     //qDebug()<<" yi "<<ui->tableWidget->item(i,j+1)->text();
@@ -500,13 +1009,8 @@ void Widget::calculate_result()
                     QTime time4=QTime::fromString(time_str4);
 
                     int allsecond4 = time4.hour()*60*60+time4.minute()*60;
-                    //qDebug()<<"4:"<<allsecond4;
+                   // qDebug()<<"4:"<<allsecond4;
 
-                    //加班
-                    QString time_str5 = "19:00";
-                    QTime time5=QTime::fromString(time_str5);
-
-                    int allsecond5 = time5.hour()*60*60+time5.minute()*60;
 
                     if(allsecond > allsecond2)
                     {
@@ -516,89 +1020,143 @@ void Widget::calculate_result()
                     {
                         zaotuitime++;
                     }
-                    if(allsecond3 > allsecond5)
+
+                    //加班
+
+                    QString time_str5 = "19:00";
+                    QTime time5=QTime::fromString(time_str5);
+
+                    int allsecond5 = time5.hour()*60*60+time5.minute()*60;
+
+                  //  qDebug()<<"5:"<<allsecond5;
+
+                    if(allsecond > allsecond5)
                     {
-                        jiabantime = allsecond3 - allsecond5;
+                        while(allsecond - 1800 > 0)
+                        {
+                            jiabantime +=0.5;
+                        }
                     }
+
+                  //  qDebug()<<"jiaban:"<<jiabantime;
+
+                    //缺勤
+                    QString time_str6 = "09:00:00";
+                    QTime time6=QTime::fromString(time_str6);
+
+                    int allsecond6 = time6.hour()*60*60+time6.minute()*60;
+
+                 //   qDebug()<<"6:"<<allsecond6;
+
+
+                    QString time_str7 = "18:00:00";
+                    QTime time7=QTime::fromString(time_str7);
+
+                    int allsecond7 = time7.hour()*60*60+time7.minute()*60;
+
+                    QString time_str8 = "12:00:00";
+                    QTime time8=QTime::fromString(time_str8);
+
+                    int allsecond8 = time8.hour()*60*60+time8.minute()*60;
+
+                    QString time_str9 = "13:00";
+                    QTime time9=QTime::fromString(time_str9);
+
+                    int allsecond9 = time9.hour()*60*60+time9.minute()*60;
+
+
+                    if(allsecond > allsecond6)
+                    {
+                        if(allsecond > allsecond8)
+                        {
+                            queqintime +=3;
+                        }
+                        else
+                        {
+                            queqintime +=0.5;
+                            while(1)
+                            {
+                                if(allsecond - 1800 > allsecond6)
+                                {
+                                    queqintime +=0.5;
+                                }
+                                else
+                                {
+                                    break;
+                                }
+                                allsecond -=1800;
+
+                            }
+                        }
+
+                    }
+
+                    //计算早退缺勤时间
+                    if(allsecond3 < allsecond4)
+                    {
+                        if(allsecond3 > allsecond9)
+                        {
+                            queqintime +=0.5;
+                            while(1)
+                            {
+                                if(allsecond4 - 1800 > allsecond3)
+                                {
+                                    queqintime += 0.5;
+                                }
+                                else
+                                {
+                                    break;
+                                }
+                                allsecond4 -= 1800;
+
+                            }
+                        }
+                        else
+                        {
+                             if(allsecond3 + 1800 > allsecond8)
+                             {
+                                 queqintime +=0.5;
+                             }
+
+                             queqintime +=5;
+
+                        }
+                    }
+
+
+                //    qDebug()<<"7:"<<allsecond7;
+
+                 //    qDebug()<<"queqin:"<<queqintime;
+
+
+
                 }
 
             }
 
         }
 
-        //把表格里的数据转成数字，进行相加
-        //转换缺勤
-        QString time_str = ui->tableWidget_2->item(m,n)->text(); //时分秒
+//        QTime a(0,0);
+//        a = a.addSecs(int(queqintime));
 
-        QTime time=QTime::fromString(time_str);
+//        QString strtime = a.toString("hh:mm");
 
-        int allsecond = time.hour()*60*60+time.minute()*60;
+        double questr = ui->tableWidget_2->item(m,n)->text().toDouble();
+        queqintime += questr;
 
-        allsecond += queqintime;
+        double jiastr = ui->tableWidget_2->item(m,n+1)->text().toDouble();
+        jiabantime +=jiastr;
 
-        QString strtime;
+        int chistr = ui->tableWidget_2->item(m,n+2)->text().toInt();
+        chidaotime +=chistr;
 
-        if(allsecond >= 86400)
-        {
-            int num = allsecond/60/60;
+        int zaostr = ui->tableWidget_2->item(m,n+3)->text().toInt();
+        zaotuitime +=zaostr;
 
-            strtime = QString::number(num) +":"+"00";
-        }
-        else
-        {
-            QTime a(0,0);
-            a = a.addSecs(int(allsecond));
-
-            strtime = a.toString("hh:mm");
-        }
-
-
-        //转换加班
-
-        QString strtime2;
-        QString jia_str = ui->tableWidget_2->item(m,n+1)->text(); //时分秒
-        qDebug()<<"jiajia"<<jia_str;
-
-        QTime jia_time=QTime::fromString(jia_str);
-
-        int jia_second = jia_time.hour()*60*60+jia_time.minute()*60;
-
-        qDebug()<<"secon"<<jia_second;
-
-        if(jia_second > 0)
-        {
-            jiabantime +=jia_second;
-            QTime a(0,0);
-            a = a.addSecs(int(jiabantime));
-
-            strtime2 = a.toString("hh:mm");
-
-        }
-        else
-        {
-
-            jiabantime +=0;
-
-            QTime a2(0,0);
-            a2 = a2.addSecs(int(jiabantime));
-
-            strtime2 = a2.toString("hh:mm");
-        }
-
-
-        //转换迟到
-        int time_str3 = ui->tableWidget_2->item(m,n+2)->text().toInt();
-
-        time_str3 += chidaotime;
-
-        //转换早退
-        int time_str4 = ui->tableWidget_2->item(m,n+3)->text().toInt();
-        time_str4 += zaotuitime;
-
-        ui->tableWidget_2->setItem(m, n, new QTableWidgetItem(strtime));
-        ui->tableWidget_2->setItem(m, n+1, new QTableWidgetItem(strtime2));
-        ui->tableWidget_2->setItem(m, n+2, new QTableWidgetItem(QString::number((time_str3))));
-        ui->tableWidget_2->setItem(m, n+3, new QTableWidgetItem(QString::number((time_str4))));
+        ui->tableWidget_2->setItem(m, n, new QTableWidgetItem(QString::number((queqintime))));
+        ui->tableWidget_2->setItem(m, n+1, new QTableWidgetItem(QString::number((jiabantime))));
+        ui->tableWidget_2->setItem(m, n+2, new QTableWidgetItem(QString::number((chidaotime))));
+        ui->tableWidget_2->setItem(m, n+3, new QTableWidgetItem(QString::number((zaotuitime))));
 
         m++;
 
@@ -629,42 +1187,160 @@ void Widget::calculate_result()
     {
         for(j = 17; j < 18; ++j)
         {
-            qDebug()<<"time:"<<ui->tableWidget->item(i,j)->text();
+            qDebug()<<"time2:"<<ui->tableWidget->item(i,j)->text();
 
             QDateTime t1time = QDateTime::fromString(ui->tableWidget->item(0,16)->text(),"yyyy-MM-dd");
             QString t1week = t1time.toString("ddd");
             if(t1week == "周六" || t1week == "周日")
             {
-                if(ui->tableWidget->item(i,j)->text() == NULL)
+                qDebug()<<"week:"<<t1week;
+
+                chidaotime = 0;
+                zaotuitime = 0;
+
+                QString time_str = ui->tableWidget->item(i,j)->text();
+                QString time_str2 = ui->tableWidget->item(i,j+1)->text();
+
+                QTime time=QTime::fromString(time_str);
+                int allsecond = time.hour()*60*60+time.minute()*60;
+
+                QTime time2=QTime::fromString(time_str2);
+                int allsecond2 = time2.hour()*60*60+time2.minute()*60;
+
+                qDebug()<<"str1:"<<allsecond;
+                 qDebug()<<"str2:"<<allsecond2;
+
+                //算缺勤
+                //大于9.00，小于18.00
+                QString time_str3 = "09:00:00";
+                QTime time3=QTime::fromString(time_str3);
+
+                int allsecond3 = time3.hour()*60*60+time3.minute()*60;
+
+                QString time_str4 = "18:00:00";
+                QTime time4=QTime::fromString(time_str4);
+
+                int allsecond4 = time4.hour()*60*60+time4.minute()*60;
+
+                QString time_str5 = "12:00:00";
+                QTime time5=QTime::fromString(time_str5);
+
+                int allsecond5 = time5.hour()*60*60+time5.minute()*60;
+
+                qDebug()<<"1";
+
+                if(allsecond > allsecond3)
                 {
-                    queqintime+=28800;
-                    jiabantime =0;
+                    if(allsecond > allsecond5)
+                    {
+                        queqintime +=3;
+                    }
+                    else
+                    {
+                        int tmpnum = allsecond - allsecond3;
+                        queqintime +=0.5;
+                        while(1)
+                        {
+                            if(tmpnum - 1800 > 0)
+                            {
+                                queqintime +=0.5;
+                            }
+                            else
+                            {
+                                break;
+                            }
+                            tmpnum -=1800;
+
+                        }
+                    }
+
                 }
-                else
+                else if(allsecond < 0 || allsecond2 < 0)
                 {
-
-                    QString time_str = ui->tableWidget->item(i,j)->text();
-                  //  qDebug()<<" time_str "<<time_str;
-
-                    QString time_str2 = ui->tableWidget->item(i,j+1)->text();
-                   // qDebug()<<" time_str2 "<<time_str2;
-
-                    QTime time=QTime::fromString(time_str);
-                    int allsecond = time.hour()*60*60+time.minute()*60;
-                    //qDebug()<<" allsecond "<<allsecond;
-
-                    QTime time2=QTime::fromString(time_str2);
-                    int allsecond2 = time2.hour()*60*60+time2.minute()*60;
-                    //qDebug()<<" allsecond2 "<<allsecond2;
-
-                    jiabantime = allsecond2 - allsecond;
+                    queqintime =0;
                 }
+                 qDebug()<<"2";
+
+
+                //算加班
+                QString time_str6 = "19:00";
+                QTime time6=QTime::fromString(time_str6);
+
+                int allsecond6 = time6.hour()*60*60+time6.minute()*60;
+
+                QString time_str7 = "13:00";
+                QTime time7=QTime::fromString(time_str7);
+
+                int allsecond7 = time7.hour()*60*60+time7.minute()*60;
+
+                if(allsecond <= allsecond5 && allsecond > 0)
+                {
+                    if(allsecond <= allsecond3)
+                    {
+                        jiabantime +=3;
+                    }
+                    else
+                    {
+                        int tmpnum = allsecond5 - allsecond;
+                         jiabantime +=0.5;
+                        while(1)
+                        {
+
+                            if(tmpnum - 1800 > 1800)
+                            {
+                                jiabantime +=0.5;
+                                qDebug()<<"jiaban:"<<jiabantime;
+                            }
+                            else
+                            {
+                                break;
+                            }
+                            tmpnum -= 1800;
+                        }
+                    }
+                }
+
+                 qDebug()<<"3";
+
+                if(allsecond2 <= allsecond6 && allsecond2 >=allsecond7)
+                {
+                    jiabantime +=5;
+                }
+
+                //计算早退缺勤时间
+                if(allsecond2 < allsecond4)
+                {
+                    if(allsecond2 > allsecond7)
+                    {
+
+                        while(allsecond4 -1800 < allsecond2)
+                        {
+                             queqintime += 0.5;
+                        }
+                    }
+                    else
+                    {
+                         if(allsecond2 + 1800 > allsecond5)
+                         {
+                             queqintime +=0.5;
+                         }
+
+                         queqintime +=5;
+
+                         if(allsecond2 < 0)
+                         {
+                             queqintime = 0;
+                         }
+
+                    }
+                }
+
             }
             else
             {
                 if(ui->tableWidget->item(i,j)->text() == NULL)
                 {
-                    queqintime+=28800;
+                    queqintime+=0;
                 }
                 else
                 {
@@ -674,20 +1350,17 @@ void Widget::calculate_result()
 
                     int allsecond = time.hour()*60*60+time.minute()*60;
 
-                    qDebug()<<"1:"<<allsecond;
+                   // qDebug()<<"1:"<<allsecond;
 
                     QString time_str2 = "09:10:00";
                     QTime time2=QTime::fromString(time_str2);
 
                     int allsecond2 = time2.hour()*60*60+time2.minute()*60;
-                    qDebug()<<"2:"<<allsecond2;
+                    //qDebug()<<"2:"<<allsecond2;
 
                     //早退
                     //qDebug()<<" yi "<<ui->tableWidget->item(i,j+1)->text();
                     QString time_str3 = ui->tableWidget->item(i,j+1)->text(); //时分秒
-
-                    qDebug()<<"lie shu:"<<time_str3;
-
                     QTime time3=QTime::fromString(time_str3);
 
                     int allsecond3 = time3.hour()*60*60+time3.minute()*60;
@@ -698,107 +1371,168 @@ void Widget::calculate_result()
                     QTime time4=QTime::fromString(time_str4);
 
                     int allsecond4 = time4.hour()*60*60+time4.minute()*60;
-                    //qDebug()<<"4:"<<allsecond4;
+                   // qDebug()<<"4:"<<allsecond4;
 
-                    //加班
-                    QString time_str5 = "19:00";
-                    QTime time5=QTime::fromString(time_str5);
-
-                    int allsecond5 = time5.hour()*60*60+time5.minute()*60;
 
                     if(allsecond > allsecond2)
                     {
                         chidaotime++;
-                        qDebug()<<"chidao"<<chidaotime;
-
                     }
                     if(allsecond3 < allsecond4)
                     {
                         zaotuitime++;
                     }
-                    if(allsecond3 > allsecond5)
+
+                    //加班
+
+                    QString time_str5 = "19:00";
+                    QTime time5=QTime::fromString(time_str5);
+
+                    int allsecond5 = time5.hour()*60*60+time5.minute()*60;
+
+                  //  qDebug()<<"5:"<<allsecond5;
+
+                    if(allsecond > allsecond5)
                     {
-                        jiabantime = allsecond3 - allsecond5;
+                        while(allsecond - 1800 > 0)
+                        {
+                            jiabantime +=0.5;
+                        }
                     }
-                    else if(allsecond3 < allsecond5)
+
+                  //  qDebug()<<"jiaban:"<<jiabantime;
+
+                    //缺勤
+                    QString time_str6 = "09:00:00";
+                    QTime time6=QTime::fromString(time_str6);
+
+                    int allsecond6 = time6.hour()*60*60+time6.minute()*60;
+
+                 //   qDebug()<<"6:"<<allsecond6;
+
+
+                    QString time_str7 = "18:00:00";
+                    QTime time7=QTime::fromString(time_str7);
+
+                    int allsecond7 = time7.hour()*60*60+time7.minute()*60;
+
+                    QString time_str8 = "12:00:00";
+                    QTime time8=QTime::fromString(time_str8);
+
+                    int allsecond8 = time8.hour()*60*60+time8.minute()*60;
+
+                    QString time_str9 = "13:00";
+                    QTime time9=QTime::fromString(time_str9);
+
+                    int allsecond9 = time9.hour()*60*60+time9.minute()*60;
+
+
+                    if(allsecond > allsecond6)
                     {
-                        jiabantime = 0;
+                        if(allsecond > allsecond8)
+                        {
+                            queqintime +=3;
+                        }
+                        else
+                        {
+                            queqintime +=0.5;
+                            while(1)
+                            {
+                                if(allsecond - 1800 > allsecond6)
+                                {
+                                    queqintime +=0.5;
+                                }
+                                else
+                                {
+                                    break;
+                                }
+                                allsecond -=1800;
+
+                            }
+                        }
+
                     }
+
+                    //计算早退缺勤时间
+                    if(allsecond3 < allsecond4)
+                    {
+                        if(allsecond3 > allsecond9)
+                        {
+                            //queqintime +=0.5;
+                            while(1)
+                            {
+                                if(allsecond4 - 1800 > allsecond3)
+                                {
+                                    queqintime += 0.5;
+                                }
+                                else
+                                {
+                                    break;
+                                }
+                                allsecond4 -= 1800;
+
+                            }
+                        }
+                        else
+                        {
+                            while(1)
+                            {
+                                if(allsecond8 - 1800 > allsecond3)
+                                {
+                                    queqintime +=0.5;
+
+                                }
+                                else
+                                {
+                                    break;
+                                }
+                                allsecond8 -=1800;
+
+                            }
+                             if(allsecond3 + 1800 > allsecond8)
+                             {
+                                 queqintime +=0.5;
+                             }
+
+                             queqintime +=5;
+
+                        }
+                    }
+
+
+                //    qDebug()<<"7:"<<allsecond7;
+
+                 //    qDebug()<<"queqin:"<<queqintime;
+
+
+
                 }
 
             }
 
         }
 
-        //把表格里的数据转成数字，进行相加
-        //转换缺勤
-        QString time_str = ui->tableWidget_2->item(m,n)->text(); //时分秒
+//        QTime a(0,0);
+//        a = a.addSecs(int(queqintime));
 
-        QTime time=QTime::fromString(time_str);
+//        QString strtime = a.toString("hh:mm");
 
-        int allsecond = time.hour()*60*60+time.minute()*60;
+        double questr = ui->tableWidget_2->item(m,n)->text().toDouble();
+        queqintime += questr;
 
-        allsecond += queqintime;
+        double jiastr = ui->tableWidget_2->item(m,n+1)->text().toDouble();
+        jiabantime +=jiastr;
 
-        QString strtime;
-        QString time_str1 = ui->tableWidget_2->item(m,n)->text().at(0);
-        QString time_str2 = ui->tableWidget_2->item(m,n)->text().at(1);
-        int time_num = (time_str1+time_str2).toInt();
-        //qDebug()<<"24：："<<time_num;
+        int chistr = ui->tableWidget_2->item(m,n+2)->text().toInt();
+        chidaotime +=chistr;
 
-        if(time_num == 24 || time_num == 16)
-        {
+        int zaostr = ui->tableWidget_2->item(m,n+3)->text().toInt();
+        zaotuitime +=zaostr;
 
-            time_num += 8;
-
-            strtime = QString::number(time_num) +":"+"00";
-
-        }
-        else
-        {
-            QTime a(0,0);
-            a = a.addSecs(int(allsecond));
-
-            strtime = a.toString("hh:mm");
-        }
-
-
-        //转换加班
-
-        QString strtime2;
-        QString jia_str = ui->tableWidget_2->item(m,n+1)->text(); //时分秒
-        //qDebug()<<"jiajia"<<jia_str;
-
-        QTime jia_time=QTime::fromString(jia_str);
-
-        int jia_second = jia_time.hour()*60*60+jia_time.minute()*60;
-
-        //qDebug()<<"secon"<<jia_second;
-
-        jia_second += jiabantime;
-        //qDebug()<<"alljia:"<<jia_second;
-        //qDebug()<<"jiatime"<<jiabantime;
-
-        QTime a(0,0);
-        a = a.addSecs(int(jia_second));
-
-        strtime2 = a.toString("hh:mm");
-
-
-
-        //转换迟到
-        int time_str3 = ui->tableWidget_2->item(m,n+2)->text().toInt();
-
-        time_str3 += chidaotime;
-
-        //转换早退
-        int time_str4 = ui->tableWidget_2->item(m,n+3)->text().toInt();
-        time_str4 += zaotuitime;
-
-        ui->tableWidget_2->setItem(m, n, new QTableWidgetItem(strtime));
-        ui->tableWidget_2->setItem(m, n+1, new QTableWidgetItem(strtime2));
-        ui->tableWidget_2->setItem(m, n+2, new QTableWidgetItem(QString::number((time_str3))));
-        ui->tableWidget_2->setItem(m, n+3, new QTableWidgetItem(QString::number((time_str4))));
+        ui->tableWidget_2->setItem(m, n, new QTableWidgetItem(QString::number((queqintime))));
+        ui->tableWidget_2->setItem(m, n+1, new QTableWidgetItem(QString::number((jiabantime))));
+        ui->tableWidget_2->setItem(m, n+2, new QTableWidgetItem(QString::number((chidaotime))));
+        ui->tableWidget_2->setItem(m, n+3, new QTableWidgetItem(QString::number((zaotuitime))));
 
         m++;
 
@@ -813,6 +1547,50 @@ void Widget::calculate_result()
     }
 
 
+}
+
+
+void Widget::on_save_file1_clicked()
+{
+    int i = 0;
+    int j = 0;
+    int m = 0;
+    int n = 1;
+
+    QAxObject *excel = new QAxObject(this);
+        excel->setControl("Excel.Application");
+        excel->setProperty("Visible", false);    //显示窗体看效果,选择ture将会看到excel表格被打开
+        excel->setProperty("DisplayAlerts", true);
+        QAxObject *workbooks = excel->querySubObject("WorkBooks");   //获取工作簿(excel文件)集合
+
+//        filepath = QFileDialog::getSaveFileName(this,"打开",
+//                                                   QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation),
+//                                                   "Excel 文件(*.xls *.xlsx *.xlsm)");
+
+        //打开刚才选定的excel
+        workbooks->dynamicCall("Open(const QString&)", filepath);
+        QAxObject *workbook = excel->querySubObject("ActiveWorkBook");
+        QAxObject *worksheet = workbook->querySubObject("WorkSheets(int)",2);
+        QAxObject *usedRange = worksheet->querySubObject("UsedRange");   //获取表格中的数据范围
+
+
+        //!!!遍历获取数据将数据写入文件
+        for (int i = 0;i < 5;i++)
+        {
+
+            for (int j = 0; j < 5; j++)
+            {
+
+                    worksheet->querySubObject("Cells(int, int)", i+7, j+1)->dynamicCall("setValue(const QVariant&)", ui->tableWidget_2->item(i, j)->text().toStdString().c_str());
+
+            }
+
+
+        }
+        //!!!保存文件
+        workbook->dynamicCall("SaveAs(const QString&)", QDir::toNativeSeparators(filepath));
+        workbooks->dynamicCall("Close()");
+        excel->dynamicCall("Quit()");
 
 }
 

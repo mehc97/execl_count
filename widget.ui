@@ -65,7 +65,7 @@
    <property name="geometry">
     <rect>
      <x>1100</x>
-     <y>740</y>
+     <y>450</y>
      <width>93</width>
      <height>61</height>
     </rect>
@@ -95,6 +95,19 @@
    </property>
    <property name="text">
     <string>计算结果</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="save_file1">
+   <property name="geometry">
+    <rect>
+     <x>1100</x>
+     <y>740</y>
+     <width>93</width>
+     <height>61</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>写入文件</string>
    </property>
   </widget>
  </widget>
